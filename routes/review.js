@@ -2,40 +2,41 @@ const express=require('express');
 var router=express.Router({mergeParams:true});
 const wrapAsync = require('../utils/wrapAsync.js');
 const ExpressError = require('../utils/ExpressError.js');
-const {listingSchema}= require('../schema.js');
-const {reviewSchema}= require('../schema.js');
+const {validateReview, isLoggedIn, isReviewAuthor}= require('../middleware.js');
+const methodOverride = require('method-override');
 
 const Review = require('../models/review.js');
 const Listing= require('../models/listing.js');
 
-const validateReview = (req,res,next) =>{
-    let{error}= reviewSchema.validate(req.body);
-    if(error){
-        let errMsg = error.details.map(el => el.message).join(",");
-        throw new ExpressError(400,errMsg);
-    }else{
-        next();
-    }
-};
-
+// const validateReview = (req,res,next) =>{
+//     let{error}= reviewSchema.validate(req.body);
+//     if(error){
+//         let errMsg = error.details.map(el => el.message).join(",");
+//         throw new ExpressError(400,errMsg);
+//     }else{
+//         next();
+//     }
+// };
+router.use(methodOverride('_method')); 
 //reviews post route
 router.post("/",
-    validateReview,wrapAsync(async(req,res) =>{
-    
-        console.log(req.params.id);
+    isLoggedIn,validateReview,wrapAsync(async(req,res) =>{
+        // console.log(req.params.id);
     let listings=await Listing.findById(req.params.id);
     let newReview = new Review(req.body.review);
-
-    listings.reviews.push(newReview);
+    newReview.author=req.user._id;
+    console.log(newReview);
+    listings.reviews.push(newReview._id);
 
     await newReview.save();
     await listings.save();
     req.flash('success',"Successfully added a new review");
     res.redirect(`/listings/${listings._id}`);
+    
 }));
 
 //Delete review route
-router.delete("/:reviewId",wrapAsync(async(req,res) =>{
+router.delete("/:reviewId",isLoggedIn,isReviewAuthor,wrapAsync(async(req,res) =>{
     let {id,reviewId}=req.params;
     await Listing.findByIdAndUpdate(id,{$pull:{reviews:reviewId}});
     await Review.findById(reviewId);
@@ -45,4 +46,3 @@ router.delete("/:reviewId",wrapAsync(async(req,res) =>{
 }));
 
 module.exports=router;
-

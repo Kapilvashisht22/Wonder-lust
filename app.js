@@ -17,6 +17,7 @@ const passport=require("passport");
 const LocalStrategy=require("passport-local");
 const User=require("./models/user.js");
 
+const {isLoggedIn} = require('./middleware.js');
 const listingRouter= require('./routes/listing.js');
 const reviewRouter=require('./routes/review.js');
 const userRouter=require('./routes/user.js');
@@ -65,8 +66,6 @@ app.get("/", (req,res) =>{
     console.log(req.cookies);
 });
 
-
-app.use(session(sessionOptions));
 app.use(flash());
 
 app.use(passport.initialize());
@@ -81,6 +80,7 @@ app.use((req,res,next) =>{
     res.locals.success= req.flash("success");
     res.locals.error= req.flash("error");
     console.log(res.locals.success);
+    res.locals.currUser=req.user;
     next();
 });
 
@@ -97,10 +97,10 @@ app.use((req,res,next) =>{
 //     res.send(registeredUser);
 // })
 
-
+app.use("/",userRouter);
 app.use('/listings',listingRouter);
 app.use('/listings/:id/reviews',reviewRouter);
-app.use("/",userRouter);
+
 
 // The order of routes is the problem.
 
