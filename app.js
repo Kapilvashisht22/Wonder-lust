@@ -1,7 +1,16 @@
+// this means we never load the .env file in any  production
+if (process.env.NODE_ENV !== "production"){
+require('dotenv').config();
+}
+//after deployment we will see different way to env credentials  and after deployment we will set it's value to production
+
+
+console.log(process.env.SECRET);
+
 const express = require('express');    
 const app = express();
 const mongoose = require('mongoose');
-const MONGO_URL ='mongodb://127.0.0.1:27017/wonderlust';
+// const MONGO_URL ='mongodb://127.0.0.1:27017/wonderlust';
 const Listing = require('./models/listing.js');
 const path = require('path');
 const methodOverride = require('method-override');
@@ -12,6 +21,7 @@ const ExpressError = require('./utils/ExpressError.js');
 const {listingSchema,reviewSchema} = require('./schema.js');
 const cookieParser = require('cookie-parser');
 const session=require("express-session");
+const MongoStore=require('connect-mongo');
 const flash=require("connect-flash");
 const passport=require("passport");
 const LocalStrategy=require("passport-local");
@@ -22,10 +32,24 @@ const listingRouter= require('./routes/listing.js');
 const reviewRouter=require('./routes/review.js');
 const userRouter=require('./routes/user.js');
 
+const dbUrl=process.env.ATLASDB_URL;
+
+main()
+.then(() =>{
+    console.log("connected to DB");
+})
+.catch((err)=>{
+    console.log(err);
+});
+async function main (){
+    await mongoose.connect(dbUrl);
+}
 
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'views'));
-app.use(methodOverride('_method')); 
+
+
+
 app.use(express.urlencoded({extended:true}));
 app.engine('ejs',ejsMate);
 app.use(express.static(path.join(__dirname,'views','public')));
@@ -36,19 +60,16 @@ const sessionOptions={
     secret:"mysecret",
     resave:false,
     saveUninitialized:true, 
+    
 
 };
+
+// const store=MongoStore.create({
+//     mongoUrl:dbUrl,
+// });
+
 app.use(session(sessionOptions));
-main()
-.then(() =>{
-    console.log("connected to DB");
-})
-.catch((err)=>{
-    console.log(err);
-});
-async function main (){
-    await mongoose.connect(MONGO_URL);
-}
+
 
 // app.get("/getCookies",(req,res) =>{
 //     res.cookie("greet","Hello from the other side");
@@ -61,10 +82,7 @@ async function main (){
 //     res.send(`Hello ${Name}`);
 // })
 
-app.get("/", (req,res) =>{
-    res.send("Hi, I am root");
-    console.log(req.cookies);
-});
+
 
 app.use(flash());
 

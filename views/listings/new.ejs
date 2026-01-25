@@ -2,8 +2,8 @@
 <body>
     <div class="row">
         <div class="col-md-8 offset-md-2">
-    
-            <form method ="Post" action="/listings" novalidate class="needs-validation">
+            <h3>Create a New Listing</h3>
+            <form method ="Post" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for ="title" class="form-label">Title</label>
                     <input name="listing[title]" placeholder="Add a catche title" type="text" class="form-control" required>
@@ -19,8 +19,8 @@
 
                 <br/>
                 <div class="mb-3">
-                    <label for ="image" class="form-label">image</label>
-                    <input name="listing[image][url]" placeholder="enter url" type="text"  class="form-control"> 
+                    <label for ="image" class="form-label">Image file</label>
+                    <input name="listing[image]" placeholder="choose file" type="file"  class="form-control"> 
                     <div class="invalid-feedback">Please enter a valid url</div>
                 </div>
                 <br/>
