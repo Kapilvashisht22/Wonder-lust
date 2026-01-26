@@ -21,7 +21,7 @@ const ExpressError = require('./utils/ExpressError.js');
 const {listingSchema,reviewSchema} = require('./schema.js');
 const cookieParser = require('cookie-parser');
 const session=require("express-session");
-const MongoStore=require('connect-mongo');
+const MongoStore=require('connect-mongo').default;
 const flash=require("connect-flash");
 const passport=require("passport");
 const LocalStrategy=require("passport-local");
@@ -56,17 +56,32 @@ app.use(express.static(path.join(__dirname,'views','public')));
 
 app.use(cookieParser())
 
-const sessionOptions={
-    secret:"mysecret",
-    resave:false,
-    saveUninitialized:true, 
+// const sessionOptions={
+//     secret:process.env.SECRET,
+//     resave:false,
+//     saveUninitialized:true, 
     
 
-};
+// };
 
 // const store=MongoStore.create({
 //     mongoUrl:dbUrl,
 // });
+const store = new MongoStore({
+    mongoUrl: dbUrl,
+    crypto: {
+        secret: process.env.SECRET,
+    },
+    touchAfter: 24 * 3600,
+});
+
+const sessionOptions = {
+    store,
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: false,
+};
+
 
 app.use(session(sessionOptions));
 
